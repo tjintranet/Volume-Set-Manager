@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume Set Manager</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .volume-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .volume-row input {
+            flex: 1;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button.secondary {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #374151;
+        }
+        button.secondary:hover {
+            background: #f9fafb;
+        }
+        button.danger {
+            background: #dc2626;
+        }
+        button.danger:hover {
+            background: #b91c1c;
+        }
+        button.remove {
+            padding: 8px;
+            background: white;
+            border: 1px solid #ddd;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Volume Set Manager</h2>
+        
+        <div id="error" class="error"></div>
+
+        <div class="form-group">
+            <label for="setISBN">Set ISBN</label>
+            <input type="text" id="setISBN" placeholder="Enter 13-digit ISBN">
+        </div>
+
+        <div class="form-group">
+            <label for="setDescription">Set Description</label>
+            <input type="text" id="setDescription" placeholder="Enter set description">
+        </div>
+
+        <div class="form-group">
+            <label>Volume ISBNs</label>
+            <div id="volumesContainer"></div>
+        </div>
+
+        <div class="buttons">
+            <button class="secondary" onclick="addVolume()">Add Volume</button>
+            <button onclick="generateCSV()">Generate CSV</button>
+            <button class="danger" onclick="resetForm()">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial volume input
+        let volumes = [''];
+        
+        // ISBN-13 validation with checksum verification
+        function isValidISBN(isbn) {
+            // Remove hyphens and spaces
+            const cleaned = isbn.replace(/[-\s]/g, '');
+            
+            // Check basic format (13 digits)
+            if (!/^\d{13}$/.test(cleaned)) {
+                return false;
+            }
+            
+            // Calculate checksum
+            let sum = 0;
+            for (let i = 0; i < 12; i++) {
+                sum += parseInt(cleaned[i]) * (i % 2 === 0 ? 1 : 3);
+            }
+            
+            // Calculate check digit
+            const checkDigit = (10 - (sum % 10)) % 10;
+            
+            // Compare with actual check digit
+            return checkDigit === parseInt(cleaned[12]);
+        }
+
+        // Create volume input row
+        function createVolumeRow(index, value = '') {
+            const row = document.createElement('div');
+            row.className = 'volume-row';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = value;
+            input.placeholder = 'Enter volume ISBN';
+            input.oninput = (e) => updateVolume(index, e.target.value);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove';
+            removeBtn.innerHTML = '❌';
+            removeBtn.onclick = () => removeVolume(index);
+            
+            row.appendChild(input);
+            row.appendChild(removeBtn);
+            return row;
+        }
+
+        // Render volumes
+        function renderVolumes() {
+            const container = document.getElementById('volumesContainer');
+            container.innerHTML = '';
+            volumes.forEach((volume, index) => {
+                container.appendChild(createVolumeRow(index, volume));
+            });
+        }
+
+        // Add new volume input
+        function addVolume() {
+            volumes.push('');
+            renderVolumes();
+        }
+
+        // Remove volume input
+        function removeVolume(index) {
+            volumes = volumes.filter((_, i) => i !== index);
+            if (volumes.length === 0) volumes = [''];
+            renderVolumes();
+        }
+
+        // Update volume ISBN
+        function updateVolume(index, value) {
+            volumes[index] = value;
+        }
+
+        // Show error message
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        // Hide error message
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Generate CSV
+        function generateCSV() {
+            const setISBN = document.getElementById('setISBN').value;
+            const setDescription = document.getElementById('setDescription').value;
+
+            // Validate inputs
+            if (!isValidISBN(setISBN)) {
+                showError('Invalid ISBN-13 format or checksum. Please enter a valid ISBN-13 number.');
+                return;
+            }
+
+            if (!setDescription.trim()) {
+                showError('Set description is required');
+                return;
+            }
+
+            const validVolumes = volumes.filter(v => v.trim());
+            if (!validVolumes.length) {
+                showError('At least one volume ISBN is required');
+                return;
+            }
+
+            if (!validVolumes.every(isValidISBN)) {
+                showError('One or more volume ISBNs are invalid. Please ensure all ISBNs are valid ISBN-13 numbers.');
+                return;
+            }
+
+            // Clear any previous errors
+            hideError();
+
+            // Generate CSV content
+            const cleanSetISBN = setISBN.replace(/[-\s]/g, '');
+            const cleanVolumeISBNs = validVolumes
+                .map(isbn => isbn.replace(/[-\s]/g, ''))
+                .join(';');
+
+            const csvContent = `ISBN,NEW,${cleanSetISBN},${setDescription},,,,,,,,,N,,,,,,,,,,,,,${cleanVolumeISBNs}`;
+
+            // Create and download CSV file
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '_');
+            const filename = `${timestamp}_${cleanSetISBN}_2.csv`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Reset form function
+        function resetForm() {
+            document.getElementById('setISBN').value = '';
+            document.getElementById('setDescription').value = '';
+            volumes = [''];
+            renderVolumes();
+            hideError();
+        }
+
+        // Initial render
+        renderVolumes();
+    </script>
+</body>
+</html>
