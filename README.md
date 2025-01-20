@@ -1,38 +1,66 @@
 # Volume Set Manager
 
-A web-based tool for managing ISBN sets and generating formatted CSV output for volume sets. The application is available in both React and vanilla JavaScript implementations.
+A web-based application for managing ISBN sets and generating formatted CSV output. This tool allows users to create and manage volume sets with ISBN-13 validation and supports both manual entry and Excel file import.
 
 ## Features
 
 - ISBN-13 validation with checksum verification
-- Dynamic volume entry management
+- Excel file import functionality
 - CSV generation in specified format
-- Error handling and validation
+- Dynamic volume entry management
 - Form reset functionality
+- Template download option
+- Comprehensive error handling
 
-## ISBN Validation
+## Installation
 
-The application implements ISBN-13 validation that includes:
-- Format verification (13 digits)
-- Checksum calculation and verification
-- Handling of hyphens and spaces in input
+1. Save the HTML file to your local machine
+2. Open the file in a web browser
+3. No additional installation or setup required
 
-### Validation Algorithm
+## Usage
 
-The ISBN-13 checksum validation works as follows:
-1. Removes all hyphens and spaces from the input
-2. Verifies the input contains exactly 13 digits
-3. Calculates the checksum using the ISBN-13 algorithm:
-   - Multiply each digit alternately by 1 and 3
-   - Sum the results
-   - Calculate check digit as `(10 - (sum mod 10)) mod 10`
-4. Verifies the calculated check digit matches the last digit of the ISBN
+### Manual Entry
+
+1. Enter the Set ISBN (13-digit ISBN required)
+2. Enter the Set Description
+3. Add Volume ISBNs using the "Add Volume" button
+4. Click "Generate CSV" to create and download the formatted CSV file
+
+### Excel Import
+
+1. Click "Download Excel Template" to get the template file
+2. Fill out the template following the format:
+   - Row 1: Headers (ISBN, Description)
+   - Row 2: Set ISBN and Description
+   - Row 3+: Volume ISBNs and Descriptions
+3. Click "Import from Excel" and select your filled template
+4. Verify the imported data
+5. Click "Generate CSV" to generate the output file
+
+### Reset Form
+
+- Click the "Reset" button to clear all entries and start over
+
+## Input Validation
+
+### ISBN Validation
+- Validates ISBN-13 format
+- Performs checksum verification
+- Handles spaces and hyphens in input
+- Validates both set ISBN and volume ISBNs
+
+### Excel File Validation
+- Validates file format
+- Checks for required headers
+- Validates all ISBNs before import
+- Provides specific error messages for invalid entries
 
 ## CSV Output Format
 
 The generated CSV follows this structure:
 ```
-ISBN,NEW,[setISBN],[setDescription],,,,,,,,,N,,,,,,,,,,,,[volumeISBNs]
+ISBN,NEW,[setISBN],[setDescription],,,,,,,,,N,,,,,,,,,,,,,{volumeISBNs}
 ```
 
 Where:
@@ -40,81 +68,64 @@ Where:
 - `[setDescription]` is the user-provided description
 - `[volumeISBNs]` are the validated volume ISBNs joined with semicolons
 
-## File Naming
+## File Naming Convention
 
-Generated CSV files follow the naming convention:
+Generated files follow the format:
 ```
 [timestamp]_[setISBN]_2.csv
 ```
 
-## Input Requirements
-
-1. Set ISBN:
-   - Must be a valid ISBN-13 number
-   - Spaces and hyphens are allowed in input
-
-2. Set Description:
-   - Required field
-   - Cannot be empty
-
-3. Volume ISBNs:
-   - At least one volume ISBN required
-   - Each must be a valid ISBN-13 number
-   - Multiple volumes supported
-
 ## Error Handling
 
-The application validates:
-1. Set ISBN format and checksum
-2. Presence of set description
-3. Presence of at least one volume ISBN
-4. Format and checksum of all volume ISBNs
+The application handles various error cases including:
+- Invalid ISBN formats
+- Missing required fields
+- Invalid Excel file format
+- Missing or invalid volume ISBNs
+- File processing errors
 
-## Implementations
+## Technical Details
 
-### React Version
-- Uses React state management
-- Built with shadcn/ui components
-- Requires React environment
+### Dependencies
+- XLSX.js (for Excel file processing)
+- No other external dependencies required
 
-### Vanilla JavaScript Version
-- Single HTML file
-- No external dependencies
-- Can be run directly in browser
-- Built with native HTML elements and JavaScript
+### Browser Support
+- Works in all modern browsers
+- Requires JavaScript enabled
+- Requires File API support
 
-## Setup and Usage
+## Limitations
 
-### React Version
-1. Ensure React environment is set up
-2. Import and use the `VolumeSetManager` component
-3. Requires shadcn/ui components
+- Only supports ISBN-13 format
+- Excel files must follow the exact template format
+- All ISBNs must be valid for CSV generation
+- No support for offline operation
+- Single file per operation
 
-### Vanilla Version
-1. Save the HTML file
-2. Open directly in a web browser
-3. No installation or setup required
+## Troubleshooting
 
-## User Interface Features
+Common issues and solutions:
 
-1. Dynamic Volume Management:
-   - Add new volume inputs
-   - Remove individual volumes
-   - At least one volume input maintained
+1. **File Won't Import**
+   - Ensure file follows template format
+   - Check that all ISBNs are valid
+   - Verify file is in .xlsx or .xls format
 
-2. Form Controls:
-   - Generate CSV button for output
-   - Reset button to clear all inputs
-   - Add Volume button for new entries
+2. **Invalid ISBN Errors**
+   - Verify ISBN is 13 digits
+   - Check for correct checksum
+   - Remove any special characters
 
-3. Visual Feedback:
-   - Error messages for invalid inputs
-   - Clear error display
-   - Responsive design
+3. **CSV Not Generating**
+   - Ensure all required fields are filled
+   - Verify all ISBNs are valid
+   - Check for error messages
 
-## Browser Compatibility
+## Contributing
 
-The application uses standard web APIs and should work in all modern browsers that support:
-- ES6+ JavaScript
-- Blob API
-- File download via anchor tags
+Feel free to submit issues and enhancement requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
