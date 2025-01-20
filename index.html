@@ -76,16 +76,6 @@
         button.danger:hover {
             background: #b91c1c;
         }
-        .template-link {
-            color: #2563eb;
-            text-decoration: underline;
-            font-size: 0.875rem;
-            display: inline-block;
-            margin-top: 0.5rem;
-        }
-        .template-link:hover {
-            color: #1d4ed8;
-        }
         button.remove {
             padding: 8px;
             background: white;
@@ -96,6 +86,34 @@
             gap: 10px;
             margin-top: 20px;
         }
+        .template-link {
+            color: #2563eb;
+            text-decoration: underline;
+            font-size: 0.875rem;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        .template-link:hover {
+            color: #1d4ed8;
+        }
+        .template-instructions {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        .template-instructions ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .template-instructions li {
+            margin: 0.25rem 0;
+        }
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -105,23 +123,46 @@
         <div id="error" class="error"></div>
 
         <div class="form-group">
+            <label for="fileUpload">Import from Excel</label>
+            <input type="file" id="fileUpload" accept=".xlsx,.xls" class="mb-2">
+            <div>
+                <a href="https://raw.githubusercontent.com/tjintranet/Volume-Set-Manager/main/template.xlsx" 
+                   class="template-link"
+                   id="templateDownload">
+                    Download Excel Template
+                </a>
+            </div>
+            <div class="template-instructions mt-2">
+                Template format:
+                <ul>
+                    <li>Row 1: Headers (ISBN, Description)</li>
+                    <li>Row 2: Set ISBN and Description</li>
+                    <li>Row 3+: Volume ISBNs and Descriptions</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label for="setISBN">Set ISBN</label>
-            <input type="text" id="setISBN" placeholder="Enter 13-digit ISBN">
+            <input
+                id="setISBN"
+                placeholder="Enter 13-digit ISBN"
+                class="mt-1"
+            />
         </div>
 
         <div class="form-group">
             <label for="setDescription">Set Description</label>
-            <input type="text" id="setDescription" placeholder="Enter set description">
+            <input
+                id="setDescription"
+                placeholder="Enter set description"
+                class="mt-1"
+            />
         </div>
 
         <div class="form-group">
             <label>Volume ISBNs</label>
             <div id="volumesContainer"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="fileUpload">Import from Excel</label>
-            <input type="file" id="fileUpload" accept=".xlsx,.xls" class="mb-2">
         </div>
 
         <div class="buttons">
@@ -219,6 +260,15 @@
             document.getElementById('error').style.display = 'none';
         }
 
+        // Reset form function
+        function resetForm() {
+            document.getElementById('setISBN').value = '';
+            document.getElementById('setDescription').value = '';
+            volumes = [''];
+            renderVolumes();
+            hideError();
+        }
+
         // Generate CSV
         function generateCSV() {
             const setISBN = document.getElementById('setISBN').value;
@@ -272,15 +322,6 @@
                 link.click();
                 document.body.removeChild(link);
             }
-        }
-
-        // Reset form function
-        function resetForm() {
-            document.getElementById('setISBN').value = '';
-            document.getElementById('setDescription').value = '';
-            volumes = [''];
-            renderVolumes();
-            hideError();
         }
 
         // Handle file upload
