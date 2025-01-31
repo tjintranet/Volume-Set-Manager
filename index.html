@@ -59,8 +59,9 @@
 
                 <!-- Set Description -->
                 <div class="mb-3">
-                    <label for="setDescription" class="form-label">Set Description</label>
-                    <input type="text" class="form-control" id="setDescription" placeholder="Enter set description">
+                    <label for="setDescription" class="form-label">Set Description (max 58 characters)</label>
+                    <input type="text" class="form-control" id="setDescription" placeholder="Enter set description" maxlength="58">
+                    <div class="form-text" id="setDescriptionCounter">0 / 58 characters</div>
                 </div>
 
                 <!-- Volumes -->
@@ -89,260 +90,338 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Store volumes as objects with ISBN and description
-        let volumes = [{ isbn: '', description: '' }];
-        
-        function isValidISBN(isbn) {
-            const cleaned = isbn.replace(/[-\s]/g, '');
-            
-            if (!/^\d{13}$/.test(cleaned)) {
-                return false;
-            }
-            
-            let sum = 0;
-            for (let i = 0; i < 12; i++) {
-                sum += parseInt(cleaned[i]) * (i % 2 === 0 ? 1 : 3);
-            }
-            
-            const checkDigit = (10 - (sum % 10)) % 10;
-            return checkDigit === parseInt(cleaned[12]);
-        }
+let volumes = [{ isbn: '', description: '' }];
+const MAX_DESCRIPTION_LENGTH = 58;
 
-        function createVolumeRow(index, volume) {
-            const row = document.createElement('div');
-            row.className = 'mb-2';
-            
-            const inputGroup = document.createElement('div');
-            inputGroup.className = 'd-flex gap-2';
-            
-            // ISBN input wrapper
-            const isbnWrapper = document.createElement('div');
-            isbnWrapper.style.width = '25%';
-            
-            // ISBN input
-            const isbnInput = document.createElement('input');
-            isbnInput.type = 'text';
-            isbnInput.className = 'form-control';
-            isbnInput.value = volume.isbn;
-            isbnInput.placeholder = 'Enter volume ISBN';
-            isbnInput.oninput = (e) => updateVolume(index, 'isbn', e.target.value);
-            
-            // Description wrapper
-            const descWrapper = document.createElement('div');
-            descWrapper.style.width = '75%';
-            
-            // Description input group
-            const descInputGroup = document.createElement('div');
-            descInputGroup.className = 'input-group';
-            
-            // Description input
-            const descInput = document.createElement('input');
-            descInput.type = 'text';
-            descInput.className = 'form-control';
-            descInput.value = volume.description;
-            descInput.placeholder = 'Enter volume description';
-            descInput.oninput = (e) => updateVolume(index, 'description', e.target.value);
-            
-            // Remove button
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'btn btn-outline-danger';
-            removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
-            removeBtn.onclick = () => removeVolume(index);
-            
-            // Assemble the components
-            isbnWrapper.appendChild(isbnInput);
-            descInputGroup.appendChild(descInput);
-            descInputGroup.appendChild(removeBtn);
-            descWrapper.appendChild(descInputGroup);
-            
-            inputGroup.appendChild(isbnWrapper);
-            inputGroup.appendChild(descWrapper);
-            row.appendChild(inputGroup);
-            
-            return row;
-        }
+function isValidISBN(isbn) {
+    const cleaned = isbn.replace(/[-\s]/g, '');
+    
+    if (!/^\d{13}$/.test(cleaned)) {
+        return false;
+    }
+    
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+        sum += parseInt(cleaned[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return checkDigit === parseInt(cleaned[12]);
+}
 
-        function renderVolumes() {
-            const container = document.getElementById('volumesContainer');
-            container.innerHTML = '';
-            volumes.forEach((volume, index) => {
-                container.appendChild(createVolumeRow(index, volume));
+function updateCharacterCount(input, counterElement) {
+    const currentLength = input.value.length;
+    counterElement.textContent = `${currentLength} / ${MAX_DESCRIPTION_LENGTH} characters`;
+    
+    if (currentLength > MAX_DESCRIPTION_LENGTH) {
+        counterElement.classList.add('text-danger');
+        input.classList.add('is-invalid');
+    } else {
+        counterElement.classList.remove('text-danger');
+        input.classList.remove('is-invalid');
+    }
+}
+
+function createVolumeRow(index, volume) {
+    const row = document.createElement('div');
+    row.className = 'mb-2';
+    
+    const inputGroup = document.createElement('div');
+    inputGroup.className = 'd-flex gap-2';
+    
+    // ISBN input wrapper
+    const isbnWrapper = document.createElement('div');
+    isbnWrapper.style.width = '25%';
+    
+    // ISBN input
+    const isbnInput = document.createElement('input');
+    isbnInput.type = 'text';
+    isbnInput.className = 'form-control';
+    isbnInput.value = volume.isbn;
+    isbnInput.placeholder = 'Enter volume ISBN';
+    isbnInput.oninput = (e) => updateVolume(index, 'isbn', e.target.value);
+    
+    // Description wrapper
+    const descWrapper = document.createElement('div');
+    descWrapper.style.width = '75%';
+    
+    // Description input group
+    const descInputGroup = document.createElement('div');
+    descInputGroup.className = 'input-group';
+    
+    // Description input
+    const descInput = document.createElement('input');
+    descInput.type = 'text';
+    descInput.className = 'form-control';
+    descInput.value = volume.description;
+    descInput.placeholder = 'Enter volume description (max 58 characters)';
+    descInput.maxLength = MAX_DESCRIPTION_LENGTH;
+    
+    // Character counter for volume description
+    const counter = document.createElement('div');
+    counter.className = 'form-text volume-counter';
+    counter.textContent = `${volume.description.length} / ${MAX_DESCRIPTION_LENGTH} characters`;
+    
+    descInput.oninput = (e) => {
+        updateVolume(index, 'description', e.target.value);
+        updateCharacterCount(e.target, counter);
+    };
+    
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn btn-outline-danger';
+    removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+    removeBtn.onclick = () => removeVolume(index);
+    
+    // Assemble the components
+    isbnWrapper.appendChild(isbnInput);
+    descInputGroup.appendChild(descInput);
+    descInputGroup.appendChild(removeBtn);
+    descWrapper.appendChild(descInputGroup);
+    descWrapper.appendChild(counter);
+    
+    inputGroup.appendChild(isbnWrapper);
+    inputGroup.appendChild(descWrapper);
+    row.appendChild(inputGroup);
+    
+    return row;
+}
+
+function renderVolumes() {
+    const container = document.getElementById('volumesContainer');
+    container.innerHTML = '';
+    volumes.forEach((volume, index) => {
+        container.appendChild(createVolumeRow(index, volume));
+    });
+}
+
+function addVolume() {
+    volumes.push({ isbn: '', description: '' });
+    renderVolumes();
+}
+
+function removeVolume(index) {
+    volumes = volumes.filter((_, i) => i !== index);
+    if (volumes.length === 0) volumes = [{ isbn: '', description: '' }];
+    renderVolumes();
+}
+
+function updateVolume(index, field, value) {
+    volumes[index][field] = value;
+}
+
+function showError(message) {
+    const error = document.getElementById('error');
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = message;
+    error.classList.remove('d-none');
+}
+
+function hideError() {
+    const error = document.getElementById('error');
+    error.classList.add('d-none');
+}
+
+function resetForm() {
+    document.getElementById('setISBN').value = '';
+    document.getElementById('setDescription').value = '';
+    document.getElementById('fileUpload').value = '';
+    volumes = [{ isbn: '', description: '' }];
+    renderVolumes();
+    hideError();
+    
+    // Reset character counter for set description
+    const setDescriptionCounter = document.getElementById('setDescriptionCounter');
+    updateCharacterCount(document.getElementById('setDescription'), setDescriptionCounter);
+}
+
+function generateCSV() {
+    const setISBN = document.getElementById('setISBN').value;
+    const setDescription = document.getElementById('setDescription').value;
+
+    // ISBN validation
+    if (!isValidISBN(setISBN)) {
+        showError('Invalid ISBN-13 format or checksum for set ISBN.');
+        return;
+    }
+
+    // Set description validation
+    if (!setDescription.trim()) {
+        showError('Set description is required');
+        return;
+    }
+    
+    if (setDescription.length > MAX_DESCRIPTION_LENGTH) {
+        showError(`Set description exceeds ${MAX_DESCRIPTION_LENGTH} characters`);
+        return;
+    }
+
+    const validVolumes = volumes.filter(v => v.isbn.trim() && v.description.trim());
+    if (!validVolumes.length) {
+        showError('At least one volume with ISBN and description is required');
+        return;
+    }
+
+    // Volume validation
+    const invalidVolumes = validVolumes.filter(v => v.description.length > MAX_DESCRIPTION_LENGTH);
+    if (invalidVolumes.length > 0) {
+        showError(`${invalidVolumes.length} volume description(s) exceed ${MAX_DESCRIPTION_LENGTH} characters`);
+        return;
+    }
+
+    if (!validVolumes.every(v => isValidISBN(v.isbn))) {
+        showError('One or more volume ISBNs are invalid. Please ensure all ISBNs are valid ISBN-13 numbers.');
+        return;
+    }
+
+    hideError();
+
+    // Create CSV content with volumes first, then set
+    let csvRows = [];
+    
+    // Add volume rows
+    validVolumes.forEach(volume => {
+        const cleanISBN = volume.isbn.replace(/[-\s]/g, '');
+        csvRows.push(`ISBN,NEW,${cleanISBN},${volume.description},,,,,,,,,N,,,,,,,,,,,`);
+    });
+    
+    // Add set row
+    const cleanSetISBN = setISBN.replace(/[-\s]/g, '');
+    csvRows.push(`ISBN,NEW,${cleanSetISBN},${setDescription},,,,,,,,,N,,,,,,,,,,,${validVolumes.map(v => v.isbn.replace(/[-\s]/g, '')).join(';')}`);
+
+    const csvContent = csvRows.join('\n');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '_');
+    const filename = `${timestamp}_${cleanSetISBN}_2.csv`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const setDescriptionInput = document.getElementById('setDescription');
+    const setDescriptionCounter = document.getElementById('setDescriptionCounter');
+    
+    setDescriptionInput.addEventListener('input', function() {
+        updateCharacterCount(this, setDescriptionCounter);
+    });
+    
+    // Initialize character counters
+    updateCharacterCount(setDescriptionInput, setDescriptionCounter);
+
+    // File upload handler
+    document.getElementById('fileUpload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, {
+                type: 'array',
+                cellDates: true,
+                cellNF: true,
+                cellText: true,
+                raw: true  // Add this to get raw values
             });
-        }
 
-        function addVolume() {
-            volumes.push({ isbn: '', description: '' });
-            renderVolumes();
-        }
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+            header: 1,
+            raw: true,  // Add this to get raw values
+            defval: ''  // Default empty value
+            } );
 
-        function removeVolume(index) {
-            volumes = volumes.filter((_, i) => i !== index);
-            if (volumes.length === 0) volumes = [{ isbn: '', description: '' }];
-            renderVolumes();
-        }
-
-        function updateVolume(index, field, value) {
-            volumes[index][field] = value;
-        }
-
-        function showError(message) {
-            const error = document.getElementById('error');
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            error.classList.remove('d-none');
-        }
-
-        function hideError() {
-            const error = document.getElementById('error');
-            error.classList.add('d-none');
-        }
-
-        function resetForm() {
-            document.getElementById('setISBN').value = '';
-            document.getElementById('setDescription').value = '';
-            document.getElementById('fileUpload').value = '';
-            volumes = [{ isbn: '', description: '' }];
-            renderVolumes();
-            hideError();
-        }
-
-        function generateCSV() {
-            const setISBN = document.getElementById('setISBN').value;
-            const setDescription = document.getElementById('setDescription').value;
-
-            if (!isValidISBN(setISBN)) {
-                showError('Invalid ISBN-13 format or checksum for set ISBN.');
+            if (jsonData.length < 2) {
+                showError('Invalid Excel file format. File should contain at least one set and one volume.');
                 return;
             }
 
-            if (!setDescription.trim()) {
-                showError('Set description is required');
+            const setData = jsonData[1];
+            if (!setData || !setData[0]) {
+                showError('Set ISBN is missing in the Excel file.');
                 return;
             }
 
-            const validVolumes = volumes.filter(v => v.isbn.trim() && v.description.trim());
-            if (!validVolumes.length) {
-                showError('At least one volume with ISBN and description is required');
+            const setIsbn = setData[0].toString().trim();
+            if (!isValidISBN(setIsbn)) {
+                showError(`Invalid set ISBN: ${setIsbn}. Please ensure it's a valid ISBN-13.`);
                 return;
             }
 
-            if (!validVolumes.every(v => isValidISBN(v.isbn))) {
-                showError('One or more volume ISBNs are invalid. Please ensure all ISBNs are valid ISBN-13 numbers.');
-                return;
-            }
+            // Validate set description length
+            // In the file upload handler, add these debug lines after reading setDesc:
+            const setDesc = setData[1] ? setData[1].toString().trim() : '';
+            console.log('Raw description:', setData[1]);
+            console.log('Trimmed description:', setDesc);
+            console.log('Description length:', setDesc.length);
+            console.log('Character codes:', Array.from(setDesc).map(char => char.charCodeAt(0)));
 
-            hideError();
+if (setDesc.length > MAX_DESCRIPTION_LENGTH) {
+    showError(`Set description in Excel exceeds ${MAX_DESCRIPTION_LENGTH} characters (Current length: ${setDesc.length})`);
+    return;
+}
 
-            // Create CSV content with volumes first, then set
-            let csvRows = [];
-            
-            // Add volume rows
-            validVolumes.forEach(volume => {
-                const cleanISBN = volume.isbn.replace(/[-\s]/g, '');
-                csvRows.push(`ISBN,NEW,${cleanISBN},${volume.description},,,,,,,,,N,,,,,,,,,,,`);
-            });
-            
-            // Add set row
-            const cleanSetISBN = setISBN.replace(/[-\s]/g, '');
-            csvRows.push(`ISBN,NEW,${cleanSetISBN},${setDescription},,,,,,,,,N,,,,,,,,,,,${validVolumes.map(v => v.isbn.replace(/[-\s]/g, '')).join(';')}`);
+            const volumeData = jsonData.slice(2);
+            const invalidVolumes = [];
+            const validVolumes = [];
 
-            const csvContent = csvRows.join('\n');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '_');
-            const filename = `${timestamp}_${cleanSetISBN}_2.csv`;
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        }
-
-        document.getElementById('fileUpload').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            try {
-                const data = await file.arrayBuffer();
-                const workbook = XLSX.read(data, {
-                    type: 'array',
-                    cellDates: true,
-                    cellNF: true,
-                    cellText: true
-                });
-
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
-
-                if (jsonData.length < 2) {
-                    showError('Invalid Excel file format. File should contain at least one set and one volume.');
-                    return;
-                }
-
-                const setData = jsonData[1];
-                if (!setData || !setData[0]) {
-                    showError('Set ISBN is missing in the Excel file.');
-                    return;
-                }
-
-                const setIsbn = setData[0].toString().trim();
-                if (!isValidISBN(setIsbn)) {
-                    showError(`Invalid set ISBN: ${setIsbn}. Please ensure it's a valid ISBN-13.`);
-                    return;
-                }
-
-                const volumeData = jsonData.slice(2);
-                const invalidVolumes = [];
-                const validVolumes = [];
-
-                volumeData.forEach((row, index) => {
-                    if (row[0]) {
-                        const isbn = row[0].toString().trim();
-                        const description = row[1] ? row[1].toString().trim() : '';
-                        
-                        if (!isValidISBN(isbn)) {
-                            invalidVolumes.push(`Row ${index + 3}: ${isbn}`);
-                        } else if (!description) {
-                            invalidVolumes.push(`Row ${index + 3}: Missing description for ISBN ${isbn}`);
-                        } else {
-                            validVolumes.push({ isbn, description });
-                        }
+            volumeData.forEach((row, index) => {
+                if (row[0]) {
+                    const isbn = row[0].toString().trim();
+                    const description = row[1] ? row[1].toString().trim() : '';
+                    
+                    if (!isValidISBN(isbn)) {
+                        invalidVolumes.push(`Row ${index + 3}: ${isbn}`);
+                    } else if (!description) {
+                        invalidVolumes.push(`Row ${index + 3}: Missing description for ISBN ${isbn}`);
+                    } else if (description.length > MAX_DESCRIPTION_LENGTH) {
+                        invalidVolumes.push(`Row ${index + 3}: Description exceeds ${MAX_DESCRIPTION_LENGTH} characters`);
+                    } else {
+                        validVolumes.push({ isbn, description });
                     }
-                });
-
-                if (invalidVolumes.length > 0) {
-                    showError(`Invalid entries found:\n${invalidVolumes.join('\n')}`);
-                    return;
                 }
+            });
 
-                if (validVolumes.length === 0) {
-                    showError('No valid volumes found in the Excel file.');
-                    return;
-                }
-
-                resetForm();
-
-                document.getElementById('setISBN').value = setIsbn;
-                document.getElementById('setDescription').value = setData[1] ? setData[1].toString().trim() : '';
-
-                volumes = validVolumes;
-                renderVolumes();
-
-                hideError();
-                e.target.value = '';
-                
-            } catch (error) {
-                console.error('Error processing file:', error);
-                showError('Error processing Excel file. Please ensure it\'s a valid Excel file with the correct format.');
+            if (invalidVolumes.length > 0) {
+                showError(`Invalid entries found:\n${invalidVolumes.join('\n')}`);
+                return;
             }
-        });
 
-        // Initial render
-        renderVolumes();
+            if (validVolumes.length === 0) {
+                showError('No valid volumes found in the Excel file.');
+                return;
+            }
+
+            resetForm();
+
+            document.getElementById('setISBN').value = setIsbn;
+            document.getElementById('setDescription').value = setDesc;
+            updateCharacterCount(setDescriptionInput, setDescriptionCounter);
+
+            volumes = validVolumes;
+            renderVolumes();
+
+            hideError();
+            e.target.value = '';
+            
+        } catch (error) {
+            console.error('Error processing file:', error);
+            showError('Error processing Excel file. Please ensure it\'s a valid Excel file with the correct format.');
+        }
+    });
+});
+
+// Initial render
+renderVolumes();
     </script>
 </body>
 </html>

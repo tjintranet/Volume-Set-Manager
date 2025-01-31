@@ -1,131 +1,115 @@
 # Volume Set Manager
 
-A web-based application for managing ISBN sets and generating formatted CSV output. This tool allows users to create and manage volume sets with ISBN-13 validation and supports both manual entry and Excel file import.
+A web-based tool for managing book volume sets and generating formatted CSV files for bulk operations.
 
 ## Features
 
-- ISBN-13 validation with checksum verification
-- Excel file import functionality
-- CSV generation in specified format
-- Dynamic volume entry management
-- Form reset functionality
-- Template download option
-- Comprehensive error handling
+### ISBN Management
+- Validates 13-digit ISBNs for both sets and individual volumes
+- Automatically calculates and verifies ISBN checksums
+- Strips spaces and hyphens from ISBNs for standardization
 
-## Installation
+### Description Handling
+- Enforces 58-character limit for both set and volume descriptions
+- Real-time character counting for all description fields
+- Visual feedback when approaching or exceeding character limits
+- Automatic trimming of whitespace
 
-1. Save the HTML file to your local machine
-2. Open the file in a web browser
-3. No additional installation or setup required
-
-## Usage
-
-### Manual Entry
-
-1. Enter the Set ISBN (13-digit ISBN required)
-2. Enter the Set Description
-3. Add Volume ISBNs using the "Add Volume" button
-4. Click "Generate CSV" to create and download the formatted CSV file
+### Volume Management
+- Add/remove volumes dynamically
+- Each volume requires both ISBN and description
+- No limit on the number of volumes per set
+- Real-time validation of all volume data
 
 ### Excel Import
+- Import data from Excel files (.xlsx, .xls)
+- Template available for download
+- Validates all data during import:
+  - Set ISBN format and checksum
+  - Set description length (max 58 characters)
+  - Volume ISBN formats and checksums
+  - Volume description lengths (max 58 characters)
+- Detailed error reporting for invalid entries
 
-1. Click "Download Excel Template" to get the template file
-2. Fill out the template following the format:
-   - Row 1: Headers (ISBN, Description)
-   - Row 2: Set ISBN and Description
-   - Row 3+: Volume ISBNs and Descriptions
-3. Click "Import from Excel" and select your filled template
-4. Verify the imported data
-5. Click "Generate CSV" to generate the output file
+### CSV Generation
+- Generates standardized CSV format for bulk operations
+- File naming convention: timestamp_setISBN_2.csv
+- CSV Structure:
+  - Volume rows listed first
+  - Set row with all volume ISBNs at the end
+  - Includes necessary formatting and placeholders
 
-### Reset Form
+### Data Validation
+- Real-time validation of all inputs
+- Checks for:
+  - Valid ISBN-13 numbers
+  - Description length limits (58 characters)
+  - Required fields
+  - Proper data formatting
+- Clear error messages for validation failures
 
-- Click the "Reset" button to clear all entries and start over
+### User Interface
+- Clean, intuitive Bootstrap-based interface
+- Responsive design
+- Visual feedback for all operations
+- Error alerts with specific messages
+- Loading indicators for file operations
 
-## Input Validation
-
-### ISBN Validation
-- Validates ISBN-13 format
-- Performs checksum verification
-- Handles spaces and hyphens in input
-- Validates both set ISBN and volume ISBNs
-
-### Excel File Validation
-- Validates file format
-- Checks for required headers
-- Validates all ISBNs before import
-- Provides specific error messages for invalid entries
+## Excel Template Format
+1. Row 1: Headers (ISBN, Description)
+2. Row 2: Set ISBN and Description
+3. Row 3+: Volume ISBNs and Descriptions
 
 ## CSV Output Format
-
-The generated CSV follows this structure:
+The tool generates a CSV file with the following structure:
 ```
-ISBN,NEW,[setISBN],[setDescription],,,,,,,,,N,,,,,,,,,,,,,{volumeISBNs}
-```
-
-Where:
-- `[setISBN]` is the validated ISBN-13 for the set
-- `[setDescription]` is the user-provided description
-- `[volumeISBNs]` are the validated volume ISBNs joined with semicolons
-
-## File Naming Convention
-
-Generated files follow the format:
-```
-[timestamp]_[setISBN]_2.csv
+ISBN,NEW,[VolumeISBN],[VolumeDescription],,,,,,,,,N,,,,,,,,,,,
+ISBN,NEW,[SetISBN],[SetDescription],,,,,,,,,N,,,,,,,,,,,,[Volume1ISBN;Volume2ISBN;...]
 ```
 
 ## Error Handling
-
-The application handles various error cases including:
-- Invalid ISBN formats
+- Invalid ISBN format or checksum
+- Description length exceeding 58 characters
 - Missing required fields
 - Invalid Excel file format
-- Missing or invalid volume ISBNs
+- Invalid data in Excel file
 - File processing errors
 
-## Technical Details
-
-### Dependencies
-- XLSX.js (for Excel file processing)
-- No other external dependencies required
-
-### Browser Support
-- Works in all modern browsers
+## Browser Compatibility
+- Works with modern web browsers
 - Requires JavaScript enabled
-- Requires File API support
+- Supports file download functionality
+- Handles local file processing
 
-## Limitations
+## Dependencies
+- Bootstrap 5.3.2
+- Bootstrap Icons 1.11.3
+- SheetJS 0.18.5
+- Modern web browser with JavaScript enabled
 
-- Only supports ISBN-13 format
-- Excel files must follow the exact template format
-- All ISBNs must be valid for CSV generation
-- No support for offline operation
-- Single file per operation
+## Usage Instructions
 
-## Troubleshooting
+### Manual Entry Method
+1. Enter set ISBN (13 digits) and description (max 58 characters)
+2. Add volumes using the "Add Volume" button
+3. For each volume:
+   - Enter 13-digit ISBN
+   - Enter description (max 58 characters)
+4. Click "Generate CSV" to create and download the formatted file
+5. Use "Reset" to clear all fields
 
-Common issues and solutions:
+### Excel Import Method
+1. Download the Excel template
+2. Fill in your data following the template format
+3. Import the Excel file
+4. Review and modify imported data if needed
+5. Generate CSV
 
-1. **File Won't Import**
-   - Ensure file follows template format
-   - Check that all ISBNs are valid
-   - Verify file is in .xlsx or .xls format
-
-2. **Invalid ISBN Errors**
-   - Verify ISBN is 13 digits
-   - Check for correct checksum
-   - Remove any special characters
-
-3. **CSV Not Generating**
-   - Ensure all required fields are filled
-   - Verify all ISBNs are valid
-   - Check for error messages
-
-## Contributing
-
-Feel free to submit issues and enhancement requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Notes
+- All ISBNs must be valid 13-digit numbers with correct checksums
+- Descriptions are limited to 58 characters including spaces
+- At least one volume is required to generate a CSV
+- The tool provides real-time validation and feedback
+- All data is processed locally in the browser
+- Generated CSV files include a timestamp in the filename for tracking
+- Excel template follows a specific format that must be maintained for successful imports
